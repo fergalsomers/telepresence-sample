@@ -20,13 +20,13 @@
 
 Create a Kind cluster
 
-```
+```bash
 kind create cluster --name=telepresence
 ```
 
 Install telepresence in the Kind cluster
 
-``` 
+``` bash
 telepresence helm install
 ```
 
@@ -34,7 +34,7 @@ This will install the traffic manager which can intercept calls.
 
 ## Deploy sample 
 
-```
+```bash
 kubectl apply -f resources/deployment.yaml
 ```
 
@@ -44,27 +44,27 @@ Telepresensce does not require Kubernetes service's, but where they exist they t
 
 ## Connect
 
-```
+```bash
 telepresence connect --namespace default
 telepresence list
 ```
 
 You should see output like the following (your port may vary). 
 
-```logs
+```text
 Connected to context kind-tele, namespace default (https://127.0.0.1:53113)
 deployment hello-world: ready to engage (traffic-agent already installed)
 ```
 
 ## Test local access
 
-```
+```bash
 curl http://service-hello-world
 ```
 
 This will print out a message, e.g:
 
-```logs
+```text
 Hello world!
 ```
 
@@ -108,7 +108,7 @@ telepresence intercept hello-world --env-file ./hw.env --port 8080 --mount=false
 
 This will output some information about the intercepted service, e.g.: 
 
-```logs
+```text
 Using Deployment hello-world
    Intercept name: hello-world
    State         : ACTIVE
@@ -127,7 +127,7 @@ The argument `-env-file ./hw.env` tells telepresence to write the pod's envrionm
 
 In this case we run a simple Go http server 
 
-```
+```bash
  go run hello_world.go &
  ```
 
@@ -135,13 +135,13 @@ In this case we run a simple Go http server
 
  ## Test the calls have been intercepted 
 
- ```
+ ```bash
 curl http://service-hello-world
 ```
 
 Now when we run the curl command we can see that instead of talking to the nginx container the request was intercepted and directed to the local Golang process
 
-```logs
+```text
 Hello from Go! !
 ```
 
@@ -150,7 +150,7 @@ This illiustrates that the HTTP request from `curl` has been re-directed to the 
 
 ## Clean-up
 
-```
+```bash
 telepresence leave hello-world
 telepresence quit
 kind delete cluster --name=telepresence
