@@ -51,7 +51,7 @@ telepresence list
 
 You should see output like the following (your port may vary). 
 
-```
+```logs
 Connected to context kind-tele, namespace default (https://127.0.0.1:53113)
 deployment hello-world: ready to engage (traffic-agent already installed)
 ```
@@ -59,17 +59,56 @@ deployment hello-world: ready to engage (traffic-agent already installed)
 ## Test local access
 
 ```
-> curl http://service-hello-world
+curl http://service-hello-world
+```
+
+This will print out a message, e.g:
+
+```logs
 Hello world!
 ```
 
 As you can see you can now curl these services directly from your laptop (or via your laptop's browser). 
-The message returned is from nginx (defined in the configmap)
+The message returned is from nginx deployment (defined in the associated configmap)
 
-## Choose to intercept requests on port 80
+This mechanism is more convenient than having continually setup port-forwarding using `kubectl` when you want to act as
+the client and send requests to a service from your commandline or browser.
+
+
+## Intercept requests on port 80
+
+You can also have requests that are being sent to services redirected and sent instead to a program running on 
+your laptop. This is called `intercepting` and it useful if you are developing server applications. To deploy something
+in a Kubernetes cluster you must have a container to run it in (e.g. Docker container). So a  development cycle can 
+consist of:
+
+1. Make code changes in your IDE
+2. Build container image from code. 
+3. Push container image to a repository.
+4. Update your Kubernetes resources (e.g. deployments to referene the new image) in your cluster (either via Kustomize or Helm deployment). 
+5. Wait for your service to be updated
+6. Test your service.
+
+
+An alternative is to:
+
+1. Make code changes in your IDE
+2. Run your code locally on your laptop (launched from your IDE), listening on a specific port. 
+3. Use telepresence to intercept requests to a service in the Kubernetes cluster and instead direct the request to this port. 
+
+This can for some developers yield a faster dev cycle leading to improved productivity.  
+
+The following code will add an 
+intercept to the hello-world deployment and send it to port 8080 on your laptop. Later we will start a small go program that will listen 
+on port 8080.  
 
 ```
-> telepresence intercept hello-world --env-file ./hw.env --port 8080 --mount=false
+telepresence intercept hello-world --env-file ./hw.env --port 8080 --mount=false
+```
+
+This will output some information about the intercepted service, e.g.: 
+
+```logs
 Using Deployment hello-world
    Intercept name: hello-world
    State         : ACTIVE
@@ -97,11 +136,16 @@ In this case we run a simple Go http server
  ## Test the calls have been intercepted 
 
  ```
- > curl http://service-hello-world
+curl http://service-hello-world
+```
+
+Now when we run the curl command we can see that instead of talking to the nginx container the request was intercepted and directed to the local Golang process
+
+```logs
 Hello from Go! !
 ```
 
-Now when we run the curl command we can see that instead of talking to the nginx container the request was intercepted and directed to the local go process
+This illiustrates that the HTTP request from `curl` has been re-directed to the locally launched Golang program listening on port 8080. 
 
 
 ## Clean-up
